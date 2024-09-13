@@ -13,12 +13,15 @@ const Sidebar = ({
   setActiveMenu: (menu: string) => void;
 }) => {
   return (
-    <aside className="w-64 px-4 pt-4 bg-gray-900 text-white h-full rounded-3xl">
+    <aside className="w-64 px-4 pt-4 md:bg-gray-900 text-white h-full rounded-3xl">
       <div className="flex items-center justify-between">
-        <div className="p-4 font-bold text-lg">CLOIT</div>
-        <MdMenuOpen size={25} color="white" className="cursor-pointer" />
+        <div className="p-4 font-bold text-lg hidden md:block">CLOIT</div>
+        <MdMenuOpen
+          size={25}
+          className="cursor-pointer text-gray-400 md:text-white"
+        />
       </div>
-      <ul className="mt-8 space-y-2 bg-gray-800 rounded-2xl py-4">
+      <ul className="mt-8 space-y-2 bg-gray-800 rounded-2xl py-4 hidden md:block">
         <li
           className={`px-4 py-2 cursor-pointer flex items-center gap-4 ${
             activeMenu === "Systems" ? "bg-green-500 rounded-lg px-4 mx-1" : ""
@@ -58,7 +61,7 @@ const Sidebar = ({
           <p className="text-grey-100">SystemCode</p>
         </li>
       </ul>
-      <ul className="mt-6 space-y-2">
+      <ul className="mt-6 space-y-2 hidden md:block">
         <li
           className={`px-4 py-2 cursor-pointer flex items-center gap-4 ${
             activeMenu === "Users & Group"
