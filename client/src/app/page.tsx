@@ -8,12 +8,14 @@ import Button from "./components/Button";
 import InputForm from "./components/InputForm";
 import { useEffect, useState } from "react";
 import { uid } from "uid";
+import api from "./helpers/api";
 
 export default function Home() {
   const [activeMenu, setActiveMenu] = useState("Menus");
   const [selectedMenu, setSelectedMenu] = useState("");
   const [expanded, setExpanded] = useState(true);
   const [id, setId] = useState("");
+  const [menus, setMenus] = useState([]);
 
   const handleSelectMenu = (menu: string) => {
     console.log(selectedMenu);
@@ -24,8 +26,18 @@ export default function Home() {
     return uid(25);
   };
 
+  const fetchMenus = async () => {
+    try {
+      const response = await api.get("/menu");
+      setMenus(response.data);
+    } catch {
+      console.log("Error fetching menus");
+    }
+  };
+
   useEffect(() => {
     setId(generateUid());
+    fetchMenus();
   }, []);
 
   return (
@@ -67,45 +79,60 @@ export default function Home() {
           </div>
 
           <TreeView className="text-gray-800" aria-label="Menu Changed">
-            <TreeView.Item id="src" defaultExpanded expanded={expanded}>
-              System Management
-              <TreeView.SubTree>
+            {menus.map(
+              (menu: {
+                id: string;
+                Depth: number;
+                Name: string;
+                ParentData: string;
+                MenuId: string;
+              }) => (
                 <TreeView.Item
-                  id="systems"
+                  id="src"
+                  key={menu.id}
                   defaultExpanded
                   expanded={expanded}
-                  onSelect={() => handleSelectMenu("Systems")}
                 >
-                  Systems
+                  System Management
                   <TreeView.SubTree>
                     <TreeView.Item
-                      id="Menu Registration"
+                      id="systems"
+                      defaultExpanded
                       expanded={expanded}
-                      onSelect={() => handleSelectMenu("Systems Code")}
+                      onSelect={() => handleSelectMenu("Systems")}
                     >
-                      Systems Code
+                      Systems
+                      <TreeView.SubTree>
+                        <TreeView.Item
+                          id="Menu Registration"
+                          expanded={expanded}
+                          onSelect={() => handleSelectMenu("Systems Code")}
+                        >
+                          Systems Code
+                        </TreeView.Item>
+                      </TreeView.SubTree>
+                    </TreeView.Item>
+                    <TreeView.Item
+                      id="menu"
+                      defaultExpanded
+                      expanded={expanded}
+                      onSelect={() => handleSelectMenu("Menu")}
+                    >
+                      Menu
+                      <TreeView.SubTree>
+                        <TreeView.Item
+                          id="Menu Registration"
+                          expanded={expanded}
+                          onSelect={() => handleSelectMenu("Menu Registration")}
+                        >
+                          Menu Registration
+                        </TreeView.Item>
+                      </TreeView.SubTree>
                     </TreeView.Item>
                   </TreeView.SubTree>
                 </TreeView.Item>
-                <TreeView.Item
-                  id="menu"
-                  defaultExpanded
-                  expanded={expanded}
-                  onSelect={() => handleSelectMenu("Menu")}
-                >
-                  Menu
-                  <TreeView.SubTree>
-                    <TreeView.Item
-                      id="Menu Registration"
-                      expanded={expanded}
-                      onSelect={() => handleSelectMenu("Menu Registration")}
-                    >
-                      Menu Registration
-                    </TreeView.Item>
-                  </TreeView.SubTree>
-                </TreeView.Item>
-              </TreeView.SubTree>
-            </TreeView.Item>
+              )
+            )}
           </TreeView>
         </div>
         <div className="col-span-7 md:col-span-6 flex flex-col md:h-full md:justify-center">
