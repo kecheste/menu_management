@@ -10,6 +10,13 @@ import { useState } from "react";
 
 export default function Home() {
   const [activeMenu, setActiveMenu] = useState("Menus");
+  const [selectedMenu, setSelectedMenu] = useState("");
+  const [expanded, setExpanded] = useState(false);
+
+  const handleSelectMenu = (menu: string) => {
+    console.log(selectedMenu);
+    setSelectedMenu(menu);
+  };
 
   return (
     <div className="flex h-screen p-8">
@@ -33,41 +40,83 @@ export default function Home() {
             </select>
           </div>
           <div className="flex items-center gap-4 mb-6">
-            <button className="bg-gray-900 text-white px-8 py-1.5 rounded-full">
+            <button
+              className="bg-gray-900 text-white px-8 py-1.5 rounded-full"
+              onClick={() => setExpanded(true)}
+            >
               Expand All
             </button>
-            <button className="text-gray-900 border px-8 py-1.5 rounded-full">
+            <button
+              className="text-gray-900 border px-8 py-1.5 rounded-full"
+              onClick={() => setExpanded(false)}
+            >
               Collapse All
             </button>
           </div>
 
-          <TreeView className="text-gray-800" aria-label="Files changed">
-            <TreeView.Item id="src" defaultExpanded>
-              src
+          <TreeView className="text-gray-800" aria-label="Menu Changed">
+            <TreeView.Item id="src" defaultExpanded expanded={expanded}>
+              System Management
               <TreeView.SubTree>
-                <TreeView.Item id="src/Avatar.tsx">Avatar.tsx</TreeView.Item>
-                <TreeView.Item id="src/Button.tsx" current>
-                  Button.tsx
+                <TreeView.Item
+                  id="systems"
+                  defaultExpanded
+                  expanded={expanded}
+                  onSelect={() => handleSelectMenu("Systems")}
+                >
+                  Systems
+                  <TreeView.SubTree>
+                    <TreeView.Item
+                      id="Menu Registration"
+                      expanded={expanded}
+                      onSelect={() => handleSelectMenu("Systems Code")}
+                    >
+                      Systems Code
+                    </TreeView.Item>
+                  </TreeView.SubTree>
+                </TreeView.Item>
+                <TreeView.Item
+                  id="menu"
+                  defaultExpanded
+                  expanded={expanded}
+                  onSelect={() => handleSelectMenu("Menu")}
+                >
+                  Menu
+                  <TreeView.SubTree>
+                    <TreeView.Item
+                      id="Menu Registration"
+                      expanded={expanded}
+                      onSelect={() => handleSelectMenu("Menu Registration")}
+                    >
+                      Menu Registration
+                    </TreeView.Item>
+                  </TreeView.SubTree>
                 </TreeView.Item>
               </TreeView.SubTree>
             </TreeView.Item>
-            <TreeView.Item id="package.json">package.json</TreeView.Item>
           </TreeView>
         </div>
-        <div className="col-span-6 flex flex-col h-full justify-center">
-          <ul className="flex flex-col gap-3">
-            <InputForm
-              text="Menu ID"
-              type="text"
-              placeholder="5ghjhf-38fhj3h-38fjkb"
-            />
-            <InputForm text="Depth" type="number" placeholder="3" />
-            <InputForm text="ParentData" type="text" placeholder="Systems" />
-            <InputForm text="Name" type="text" placeholder="System Code" />
+        {selectedMenu !== "" && (
+          <div className="col-span-6 flex flex-col h-full justify-center">
+            <ul className="flex flex-col gap-3">
+              <InputForm
+                text="Menu ID"
+                type="text"
+                placeholder="5ghjhf-38fhj3h-38fjkb"
+              />
+              <InputForm text="Depth" type="number" placeholder="3" />
+              <InputForm text="ParentData" type="text" placeholder="Systems" />
+              <InputForm
+                text="Name"
+                type="text"
+                placeholder="System Code"
+                value={selectedMenu}
+              />
 
-            <Button text="Save" />
-          </ul>
-        </div>
+              <Button text="Save" />
+            </ul>
+          </div>
+        )}
       </main>
     </div>
   );
