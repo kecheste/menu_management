@@ -8,7 +8,8 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: "https://menu-management-ltyh.vercel.app/",
+    // origin: "https://menu-management-ltyh.vercel.app/",
+    origin: "*",
     optionsSuccessStatus: 200,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
