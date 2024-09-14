@@ -4,6 +4,8 @@ import { MdMenuOpen } from "react-icons/md";
 import { FaFolder } from "react-icons/fa";
 import { CiGrid41 } from "react-icons/ci";
 import { CiFolderOn } from "react-icons/ci";
+import { useEffect, useState } from "react";
+import api from "../helpers/api";
 
 const Sidebar = ({
   activeMenu,
@@ -12,78 +14,61 @@ const Sidebar = ({
   activeMenu: string;
   setActiveMenu: (menu: string) => void;
 }) => {
+  interface MenuItem {
+    id: string;
+    Depth: number;
+    Name: string;
+    ParentData: string;
+    MenuId: string;
+  }
+
+  const [menus, setMenus] = useState<MenuItem[]>([]);
+
+  const fetchMenus = async () => {
+    try {
+      const response = await api.get("/menu");
+      setMenus(response.data);
+    } catch {
+      console.log("Error fetching menus");
+    }
+  };
+
+  useEffect(() => {
+    fetchMenus();
+  }, []);
+
+  // Function to render the correct icon based on depth
+  const renderIcon = (depth: number) => {
+    if (depth === 1) {
+      return <CiGrid41 size={22} className="text-gray-100" />
+    } else if (depth === 2) {
+      return <FaFolder size={22} color="white" />;;
+    }
+    return null; // Do not show an icon for depth 3 or more
+  };
+
   return (
-    <aside className="w-64 px-4 pt-4 md:bg-gray-900 text-white h-full rounded-3xl">
+    <aside className="w-64 px-4 pt-4 md:bg-gray-900 text-white h-full min-w-fit rounded-3xl">
       <div className="flex items-center justify-between">
         <div className="p-4 font-bold text-lg hidden md:block">CLOIT</div>
-        <MdMenuOpen
-          size={25}
-          className="cursor-pointer text-gray-400 md:text-white"
-        />
+        <MdMenuOpen size={25} className="cursor-pointer text-gray-400 md:text-white" />
       </div>
-      <ul className="mt-8 space-y-2 bg-gray-800 rounded-2xl py-4 hidden md:block">
-        <li
-          className={`px-4 py-2 cursor-pointer flex items-center gap-4 ${
-            activeMenu === "Systems" ? "bg-green-500 rounded-lg px-4 mx-1" : ""
-          }`}
-          onClick={() => setActiveMenu("Systems")}
-        >
-          <FaFolder size={22} color="white" />
-          <p className="text-grey-100">Systems</p>
-        </li>
-        <li
-          className={`px-4 py-2 cursor-pointer flex items-center gap-4 ${
-            activeMenu === "Menus" ? "bg-green-500 rounded-lg px-4 mx-1" : ""
-          }`}
-          onClick={() => setActiveMenu("Menus")}
-        >
-          <CiGrid41 size={22} className="text-gray-100" />
-          <p className="text-grey-100">Menus</p>
-        </li>
-        <li
-          className={`px-4 py-2 cursor-pointer flex items-center gap-4 ${
-            activeMenu === "API List" ? "bg-green-500 rounded-lg px-4 mx-1" : ""
-          }`}
-          onClick={() => setActiveMenu("API List")}
-        >
-          <CiGrid41 size={22} className="text-gray-100" />
-          <p className="text-grey-100">API List</p>
-        </li>
-        <li
-          className={`px-4 py-2 cursor-pointer flex items-center gap-4 ${
-            activeMenu === "SystemCode"
-              ? "bg-green-500 rounded-lg px-4 mx-1"
-              : ""
-          }`}
-          onClick={() => setActiveMenu("SystemCode")}
-        >
-          <CiGrid41 size={22} className="text-gray-100" />
-          <p className="text-grey-100">SystemCode</p>
-        </li>
-      </ul>
-      <ul className="mt-6 space-y-2 hidden md:block">
-        <li
-          className={`px-4 py-2 cursor-pointer flex items-center gap-4 ${
-            activeMenu === "Users & Group"
-              ? "bg-green-500 rounded-lg px-4 mx-1"
-              : ""
-          }`}
-          onClick={() => setActiveMenu("Users & Group")}
-        >
-          <CiFolderOn size={22} className="text-gray-300" />
-          <p className="text-grey-100">Users & Group</p>
-        </li>
-        <li
-          className={`px-4 py-2 cursor-pointer flex items-center gap-4 ${
-            activeMenu === "Competition"
-              ? "bg-green-500 rounded-lg px-4 mx-1"
-              : ""
-          }`}
-          onClick={() => setActiveMenu("Competition")}
-        >
-          <CiFolderOn size={22} className="text-gray-300" />
-          <p className="text-grey-100">Competition</p>
-        </li>
+
+      <ul className="mt-8 space-y-2 bg-gray-800 rounded-2xl py-4 hidden md:block min-w-fit">
+        {menus.map((menu) => (
+          menu.Depth <= 2 && ( // Only show items with depth 1 or 2
+            <li
+              key={menu.id}
+              className={`px-4 py-2 cursor-pointer flex items-center justify-start gap-4 ${
+                activeMenu === menu.Name ? "bg-green-500 rounded-lg px-4 mx-1" : ""
+              }`}
+              onClick={() => setActiveMenu(menu.Name)}
+            >
+              {renderIcon(menu.Depth)}
+              <p className="text-grey-100 w-full ">{menu.Name}</p>
+            </li>
+          )
+        ))}
       </ul>
     </aside>
   );

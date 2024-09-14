@@ -121,7 +121,7 @@ export default function Home() {
             </h1>
           </div>
           <div className="my-4 flex items-center">
-            <select className="border rounded-md bg-gray-100 rounded-xl border-none text-gray-600 px-6 py-2 outline-none">
+            <select className="border rounded-md bg-gray-100 border-none text-gray-600 px-6 py-2 outline-none">
               <option>System management</option>
             </select>
           </div>
@@ -165,13 +165,14 @@ export default function Home() {
               text="ParentData"
               type="text"
               placeholder="Systems"
-              onChange={(e) => setMenuName(e.target.value)}
-            />
+
+              onChange={(e) => setMenuParentData(e.target.value)}
+              />
             <InputForm
               text="Name"
               type="text"
               placeholder="System Code"
-              onChange={(e) => setMenuParentData(e.target.value)}
+              onChange={(e) => setMenuName(e.target.value)}
             />
 
             <Button text="Save" onClick={handleCreateMenu} loading={loading} />
