@@ -8,8 +8,8 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    // origin: "https://menu-management-ltyh.vercel.app",
-    origin: "http://localhost:3000",
+    origin: "https://menu-management-ltyh.vercel.app",
+    // origin: "http://localhost:3000",
     optionsSuccessStatus: 200,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -19,8 +19,8 @@ app.use(
 app.use((req, res, next) => {
   res.header(
     "Access-Control-Allow-Origin",
-    // "https://menu-management-ltyh.vercel.app"
-    "http://localhost:3000"
+    "https://menu-management-ltyh.vercel.app"
+    // "http://localhost:3000"
   );
   res.header(
     "Access-Control-Allow-Methods",
