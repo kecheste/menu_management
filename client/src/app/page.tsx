@@ -9,10 +9,10 @@ import { useEffect, useState } from "react";
 import { uid } from "uid";
 import api from "./helpers/api";
 import { TreeView } from "@primer/react";
+import ClipLoader from "react-spinners/ClipLoader";
 
 export default function Home() {
   const [activeMenu, setActiveMenu] = useState("Menus");
-  const [selectedMenu, setSelectedMenu] = useState("");
   const [expanded, setExpanded] = useState(true);
   const [id, setId] = useState("");
   const [menus, setMenus] = useState<MenuItem[]>([]);
@@ -21,11 +21,6 @@ export default function Home() {
   const [menuDepth, setMenuDepth] = useState(2);
   const [menuParentData, setMenuParentData] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const handleSelectMenu = (menu: string) => {
-    console.log(selectedMenu);
-    setSelectedMenu(menu);
-  };
 
   const generateUid = () => {
     return uid(25);
@@ -62,7 +57,6 @@ export default function Home() {
             id={node.Name}
             expanded={expanded}
             defaultExpanded={expanded}
-            onSelect={() => handleSelectMenu(node.Name)}
           >
             {node.Name}
             {hasChildren && (
@@ -98,13 +92,28 @@ export default function Home() {
   };
 
   useEffect(() => {
-    setId(generateUid());
     fetchMenus();
   }, []);
 
+  useEffect(() => {
+    setId(generateUid());
+  }, [menus]);
+
+  if (menus.length === 0) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <ClipLoader color="#000000" loading={true} size={30} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8 md:flex-row h-full md:h-screen sm:p-8 p-2 overflow-y-scroll">
-      <Sidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
+      <Sidebar
+        menus={menus}
+        activeMenu={activeMenu}
+        setActiveMenu={setActiveMenu}
+      />
       <main className="grid grid-cols-7 md:grid-cols-12 md:gap-20 gap-10 md:px-10 px-4">
         <div className="col-span-7 md:col-span-6 flex-col">
           <div className="flex items-center gap-3 mb-10">
@@ -140,12 +149,18 @@ export default function Home() {
             </button>
           </div>
 
-          <TreeView className="text-gray-800" aria-label="Menu Changed">
-            <TreeView.Item id="src" defaultExpanded expanded={expanded}>
-              System Management
-              {renderTree("System Management")}
-            </TreeView.Item>
-          </TreeView>
+          {loading ? (
+            <div className="flex flex-col items-center h-1/2 justify-center">
+              <ClipLoader color="#000000" loading={loading} size={30} />
+            </div>
+          ) : (
+            <TreeView className="text-gray-800" aria-label="Menu Changed">
+              <TreeView.Item id="src" defaultExpanded expanded={expanded}>
+                System Management
+                {renderTree("System Management")}
+              </TreeView.Item>
+            </TreeView>
+          )}
         </div>
         <div className="col-span-7 md:col-span-6 flex flex-col md:h-full md:justify-center">
           <ul className="flex flex-col gap-3">
@@ -165,9 +180,8 @@ export default function Home() {
               text="ParentData"
               type="text"
               placeholder="Systems"
-
               onChange={(e) => setMenuParentData(e.target.value)}
-              />
+            />
             <InputForm
               text="Name"
               type="text"
