@@ -3,17 +3,24 @@
 import Sidebar from "./components/Sidebar";
 import { BsGridFill } from "react-icons/bs";
 import { FaFolder } from "react-icons/fa";
-import { TreeView } from "@primer/react";
 import Button from "./components/Button";
 import InputForm from "./components/InputForm";
 import { useEffect, useState } from "react";
 import { uid } from "uid";
+import api from "./helpers/api";
+import { TreeView } from "@primer/react";
 
 export default function Home() {
   const [activeMenu, setActiveMenu] = useState("Menus");
   const [selectedMenu, setSelectedMenu] = useState("");
   const [expanded, setExpanded] = useState(true);
   const [id, setId] = useState("");
+  const [menus, setMenus] = useState<MenuItem[]>([]);
+
+  const [menuName, setMenuName] = useState("");
+  const [menuDepth, setMenuDepth] = useState(2);
+  const [menuParentData, setMenuParentData] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSelectMenu = (menu: string) => {
     console.log(selectedMenu);
@@ -24,8 +31,75 @@ export default function Home() {
     return uid(25);
   };
 
+  const fetchMenus = async () => {
+    try {
+      const response = await api.get("/menu");
+      setMenus(response.data);
+    } catch {
+      console.log("Error fetching menus");
+    }
+  };
+
+  interface MenuItem {
+    id: string;
+    Depth: number;
+    Name: string;
+    ParentData: string;
+    MenuId: string;
+  }
+
+  const renderTree = (parent: string) => {
+    return menus
+      .filter((node: MenuItem) => node.ParentData === parent)
+      .map((node: MenuItem) => {
+        const hasChildren = menus.some(
+          (child: MenuItem) => child.ParentData === node.Name
+        );
+
+        return (
+          <TreeView.Item
+            key={node.id}
+            id={node.Name}
+            expanded={expanded}
+            defaultExpanded={expanded}
+            onSelect={() => handleSelectMenu(node.Name)}
+          >
+            {node.Name}
+            {hasChildren && (
+              <TreeView.SubTree>{renderTree(node.Name)}</TreeView.SubTree>
+            )}
+          </TreeView.Item>
+        );
+      });
+  };
+
+  const handleCreateMenu = async () => {
+    try {
+      setLoading(true);
+      if (menuName === "" || menuParentData === "" || menuDepth === 0) {
+        console.log("Please fill all fields");
+        setLoading(false);
+        return;
+      }
+      const uuid = generateUid();
+      console.log(menuName, menuParentData, menuDepth, uuid);
+      const response = await api.post("/menu", {
+        MenuId: uuid,
+        Depth: menuDepth,
+        ParentData: menuParentData,
+        Name: menuName,
+      });
+      setMenus([...menus, response.data]);
+      setLoading(false);
+    } catch {
+      console.log("Error creating menu");
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     setId(generateUid());
+    fetchMenus();
   }, []);
 
   return (
@@ -69,42 +143,7 @@ export default function Home() {
           <TreeView className="text-gray-800" aria-label="Menu Changed">
             <TreeView.Item id="src" defaultExpanded expanded={expanded}>
               System Management
-              <TreeView.SubTree>
-                <TreeView.Item
-                  id="systems"
-                  defaultExpanded
-                  expanded={expanded}
-                  onSelect={() => handleSelectMenu("Systems")}
-                >
-                  Systems
-                  <TreeView.SubTree>
-                    <TreeView.Item
-                      id="Menu Registration"
-                      expanded={expanded}
-                      onSelect={() => handleSelectMenu("Systems Code")}
-                    >
-                      Systems Code
-                    </TreeView.Item>
-                  </TreeView.SubTree>
-                </TreeView.Item>
-                <TreeView.Item
-                  id="menu"
-                  defaultExpanded
-                  expanded={expanded}
-                  onSelect={() => handleSelectMenu("Menu")}
-                >
-                  Menu
-                  <TreeView.SubTree>
-                    <TreeView.Item
-                      id="Menu Registration"
-                      expanded={expanded}
-                      onSelect={() => handleSelectMenu("Menu Registration")}
-                    >
-                      Menu Registration
-                    </TreeView.Item>
-                  </TreeView.SubTree>
-                </TreeView.Item>
-              </TreeView.SubTree>
+              {renderTree("System Management")}
             </TreeView.Item>
           </TreeView>
         </div>
@@ -116,16 +155,26 @@ export default function Home() {
               placeholder="5ghjhf-38fhj3h-38fjkb"
               value={id}
             />
-            <InputForm text="Depth" type="number" placeholder="3" />
-            <InputForm text="ParentData" type="text" placeholder="Systems" />
+            <InputForm
+              text="Depth"
+              type="number"
+              placeholder="3"
+              onChange={(e) => setMenuDepth(Number(e.target.value))}
+            />
+            <InputForm
+              text="ParentData"
+              type="text"
+              placeholder="Systems"
+              onChange={(e) => setMenuName(e.target.value)}
+            />
             <InputForm
               text="Name"
               type="text"
               placeholder="System Code"
-              value={selectedMenu}
+              onChange={(e) => setMenuParentData(e.target.value)}
             />
 
-            <Button text="Save" />
+            <Button text="Save" onClick={handleCreateMenu} loading={loading} />
           </ul>
         </div>
       </main>
