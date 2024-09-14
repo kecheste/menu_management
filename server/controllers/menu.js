@@ -14,14 +14,17 @@ const menuController = {
 
       const menu = await prisma.menu.create({
         data: {
-            MenuId, Depth, ParentData, Name
+          MenuId,
+          Depth,
+          ParentData,
+          Name,
         },
       });
 
       res.status(200).json(menu);
     } catch (error) {
       console.error({ error: "Failed to create menu" });
-      res.status(500).json( error);
+      res.status(500).json(error);
     }
   },
 
