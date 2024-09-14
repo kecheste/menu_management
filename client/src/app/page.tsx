@@ -21,6 +21,8 @@ export default function Home() {
   const [menuDepth, setMenuDepth] = useState(2);
   const [menuParentData, setMenuParentData] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedRootTree, setSelectedRootTree] = useState("System Management");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const generateUid = () => {
     return uid(25);
@@ -91,6 +93,8 @@ export default function Home() {
     }
   };
 
+  const depth1Menus = menus.filter((menu) => menu.Depth === 1);
+
   useEffect(() => {
     fetchMenus();
   }, []);
@@ -108,13 +112,15 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col gap-8 md:flex-row h-full md:h-screen sm:p-8 p-2 overflow-y-scroll">
+    <div className="flex flex-col gap-8 md:flex-row h-full md:h-screen sm:p-8 p-2">
       <Sidebar
         menus={menus}
         activeMenu={activeMenu}
         setActiveMenu={setActiveMenu}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
       />
-      <main className="grid grid-cols-7 md:grid-cols-12 md:gap-20 gap-10 md:px-10 px-4">
+      <main className="grid grid-cols-7 md:grid-cols-12 md:gap-20 pt-12 md:pt-0 gap-10 md:px-10 px-4">
         <div className="col-span-7 md:col-span-6 flex-col">
           <div className="flex items-center gap-3 mb-10">
             <FaFolder size={22} className="text-gray-300" />
@@ -130,19 +136,36 @@ export default function Home() {
             </h1>
           </div>
           <div className="my-4 flex items-center">
-            <select className="border rounded-md bg-gray-100 border-none text-gray-600 px-6 py-2 outline-none">
-              <option>System management</option>
+            <select
+              className="border rounded-md bg-gray-100 border-none text-gray-600 px-6 py-2 outline-none"
+              onChange={(e) => setSelectedRootTree(e.target.value)}
+            >
+              {depth1Menus.map((menu) => (
+                <option className="text-gray-700" key={menu.id}>
+                  {menu.Name}
+                </option>
+              ))}
             </select>
           </div>
           <div className="flex items-center gap-4 md:mb-6 mb-4">
             <button
-              className="bg-gray-900 text-white text-sm md:text-md px-8 py-1.5 rounded-full"
+              className={
+                "text-sm md:text-md px-8 py-1.5 rounded-full " +
+                (expanded
+                  ? "bg-gray-900 text-white"
+                  : "bg-white border text-gray-900")
+              }
               onClick={() => setExpanded(true)}
             >
               Expand All
             </button>
             <button
-              className="text-gray-900 border text-sm md:text-md px-8 py-1.5 rounded-full"
+              className={
+                "text-sm md:text-md px-8 py-1.5 rounded-full " +
+                (expanded
+                  ? "bg-white border text-gray-900"
+                  : "bg-gray-900 text-white")
+              }
               onClick={() => setExpanded(false)}
             >
               Collapse All
@@ -156,14 +179,14 @@ export default function Home() {
           ) : (
             <TreeView className="text-gray-800" aria-label="Menu Changed">
               <TreeView.Item id="src" defaultExpanded expanded={expanded}>
-                System Management
+                {selectedRootTree}
                 {renderTree("System Management")}
               </TreeView.Item>
             </TreeView>
           )}
         </div>
         <div className="col-span-7 md:col-span-6 flex flex-col md:h-full md:justify-center">
-          <ul className="flex flex-col gap-3">
+          <form className="flex flex-col gap-3">
             <InputForm
               text="Menu ID"
               type="text"
@@ -188,9 +211,9 @@ export default function Home() {
               placeholder="System Code"
               onChange={(e) => setMenuName(e.target.value)}
             />
-
+            <div className="p-1"></div>
             <Button text="Save" onClick={handleCreateMenu} loading={loading} />
-          </ul>
+          </form>
         </div>
       </main>
     </div>
