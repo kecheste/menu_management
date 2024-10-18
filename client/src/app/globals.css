@@ -19,7 +19,6 @@
 body {
   background-color: white;
   color: rgb(255, 255, 255);
-  overflow: hidden;
 }
 
 @layer utilities {
@@ -106,4 +105,5 @@ body {
 
 * {
   font-size: 19px;
+  font-weight: 400;
 }

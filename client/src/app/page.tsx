@@ -3,35 +3,124 @@
 import Sidebar from "./components/Sidebar";
 import { BsGridFill } from "react-icons/bs";
 import { FaFolder } from "react-icons/fa";
-import { TreeView } from "@primer/react";
 import Button from "./components/Button";
 import InputForm from "./components/InputForm";
 import { useEffect, useState } from "react";
 import { uid } from "uid";
+import api from "./helpers/api";
+import { TreeView } from "@primer/react";
+import ClipLoader from "react-spinners/ClipLoader";
 
 export default function Home() {
   const [activeMenu, setActiveMenu] = useState("Menus");
-  const [selectedMenu, setSelectedMenu] = useState("");
   const [expanded, setExpanded] = useState(true);
   const [id, setId] = useState("");
+  const [menus, setMenus] = useState<MenuItem[]>([]);
 
-  const handleSelectMenu = (menu: string) => {
-    console.log(selectedMenu);
-    setSelectedMenu(menu);
-  };
+  const [menuName, setMenuName] = useState("");
+  const [menuDepth, setMenuDepth] = useState(2);
+  const [menuParentData, setMenuParentData] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [selectedRootTree, setSelectedRootTree] = useState("System Management");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const generateUid = () => {
     return uid(25);
   };
 
+  const fetchMenus = async () => {
+    try {
+      const response = await api.get("/menu");
+      setMenus(response.data);
+    } catch {
+      console.log("Error fetching menus");
+    }
+  };
+
+  interface MenuItem {
+    id: string;
+    Depth: number;
+    Name: string;
+    ParentData: string;
+    MenuId: string;
+  }
+
+  const renderTree = (parent: string) => {
+    return menus
+      .filter((node: MenuItem) => node.ParentData === parent)
+      .map((node: MenuItem) => {
+        const hasChildren = menus.some(
+          (child: MenuItem) => child.ParentData === node.Name
+        );
+
+        return (
+          <TreeView.Item
+            key={node.id}
+            id={node.Name}
+            expanded={expanded}
+            defaultExpanded={expanded}
+          >
+            {node.Name}
+            {hasChildren && (
+              <TreeView.SubTree>{renderTree(node.Name)}</TreeView.SubTree>
+            )}
+          </TreeView.Item>
+        );
+      });
+  };
+
+  const handleCreateMenu = async () => {
+    try {
+      setLoading(true);
+      if (menuName === "" || menuParentData === "" || menuDepth === 0) {
+        console.log("Please fill all fields");
+        setLoading(false);
+        return;
+      }
+      const uuid = generateUid();
+      console.log(menuName, menuParentData, menuDepth, uuid);
+      const response = await api.post("/menu", {
+        MenuId: uuid,
+        Depth: menuDepth,
+        ParentData: menuParentData,
+        Name: menuName,
+      });
+      setMenus([...menus, response.data]);
+      setLoading(false);
+    } catch {
+      console.log("Error creating menu");
+      setLoading(false);
+    }
+  };
+
+  const depth1Menus = menus.filter((menu) => menu.Depth === 1);
+
   useEffect(() => {
-    setId(generateUid());
+    fetchMenus();
   }, []);
 
+  useEffect(() => {
+    setId(generateUid());
+  }, [menus]);
+
+  if (menus.length === 0) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <ClipLoader color="#000000" loading={true} size={30} />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-8 md:flex-row h-full md:h-screen sm:p-8 p-2 overflow-y-scroll">
-      <Sidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
-      <main className="grid grid-cols-7 md:grid-cols-12 md:gap-20 gap-10 md:px-10 px-4">
+    <div className="flex flex-col gap-8 md:flex-row h-full md:h-screen sm:p-8 p-2">
+      <Sidebar
+        menus={menus}
+        activeMenu={activeMenu}
+        setActiveMenu={setActiveMenu}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
+      <main className="grid grid-cols-7 md:grid-cols-12 md:gap-20 pt-12 md:pt-0 gap-10 md:px-10 px-4">
         <div className="col-span-7 md:col-span-6 flex-col">
           <div className="flex items-center gap-3 mb-10">
             <FaFolder size={22} className="text-gray-300" />
@@ -47,86 +136,84 @@ export default function Home() {
             </h1>
           </div>
           <div className="my-4 flex items-center">
-            <select className="border rounded-md bg-gray-100 rounded-xl border-none text-gray-600 px-6 py-2 outline-none">
-              <option>System management</option>
+            <select
+              className="border rounded-md bg-gray-100 border-none text-gray-600 px-6 py-2 outline-none"
+              onChange={(e) => setSelectedRootTree(e.target.value)}
+            >
+              {depth1Menus.map((menu) => (
+                <option className="text-gray-700" key={menu.id}>
+                  {menu.Name}
+                </option>
+              ))}
             </select>
           </div>
           <div className="flex items-center gap-4 md:mb-6 mb-4">
             <button
-              className="bg-gray-900 text-white text-sm md:text-md px-8 py-1.5 rounded-full"
+              className={
+                "text-sm md:text-md px-8 py-1.5 rounded-full " +
+                (expanded
+                  ? "bg-gray-900 text-white"
+                  : "bg-white border text-gray-900")
+              }
               onClick={() => setExpanded(true)}
             >
               Expand All
             </button>
             <button
-              className="text-gray-900 border text-sm md:text-md px-8 py-1.5 rounded-full"
+              className={
+                "text-sm md:text-md px-8 py-1.5 rounded-full " +
+                (expanded
+                  ? "bg-white border text-gray-900"
+                  : "bg-gray-900 text-white")
+              }
               onClick={() => setExpanded(false)}
             >
               Collapse All
             </button>
           </div>
 
-          <TreeView className="text-gray-800" aria-label="Menu Changed">
-            <TreeView.Item id="src" defaultExpanded expanded={expanded}>
-              System Management
-              <TreeView.SubTree>
-                <TreeView.Item
-                  id="systems"
-                  defaultExpanded
-                  expanded={expanded}
-                  onSelect={() => handleSelectMenu("Systems")}
-                >
-                  Systems
-                  <TreeView.SubTree>
-                    <TreeView.Item
-                      id="Menu Registration"
-                      expanded={expanded}
-                      onSelect={() => handleSelectMenu("Systems Code")}
-                    >
-                      Systems Code
-                    </TreeView.Item>
-                  </TreeView.SubTree>
-                </TreeView.Item>
-                <TreeView.Item
-                  id="menu"
-                  defaultExpanded
-                  expanded={expanded}
-                  onSelect={() => handleSelectMenu("Menu")}
-                >
-                  Menu
-                  <TreeView.SubTree>
-                    <TreeView.Item
-                      id="Menu Registration"
-                      expanded={expanded}
-                      onSelect={() => handleSelectMenu("Menu Registration")}
-                    >
-                      Menu Registration
-                    </TreeView.Item>
-                  </TreeView.SubTree>
-                </TreeView.Item>
-              </TreeView.SubTree>
-            </TreeView.Item>
-          </TreeView>
+          {loading ? (
+            <div className="flex flex-col items-center h-1/2 justify-center">
+              <ClipLoader color="#000000" loading={loading} size={30} />
+            </div>
+          ) : (
+            <TreeView className="text-gray-800" aria-label="Menu Changed">
+              <TreeView.Item id="src" defaultExpanded expanded={expanded}>
+                {selectedRootTree}
+                {renderTree("System Management")}
+              </TreeView.Item>
+            </TreeView>
+          )}
         </div>
         <div className="col-span-7 md:col-span-6 flex flex-col md:h-full md:justify-center">
-          <ul className="flex flex-col gap-3">
+          <form className="flex flex-col gap-3">
             <InputForm
               text="Menu ID"
               type="text"
               placeholder="5ghjhf-38fhj3h-38fjkb"
               value={id}
             />
-            <InputForm text="Depth" type="number" placeholder="3" />
-            <InputForm text="ParentData" type="text" placeholder="Systems" />
+            <InputForm
+              text="Depth"
+              type="number"
+              placeholder="3"
+              onChange={(e) => setMenuDepth(Number(e.target.value))}
+            />
+            <InputForm
+              text="ParentData"
+              type="text"
+              placeholder="Systems"
+              onChange={(e) => setMenuParentData(e.target.value)}
+            />
             <InputForm
               text="Name"
               type="text"
               placeholder="System Code"
-              value={selectedMenu}
+              onChange={(e) => setMenuName(e.target.value)}
             />
-
-            <Button text="Save" />
-          </ul>
+            <div className="p-1"></div>
+            <Button text="Save" onClick={handleCreateMenu} loading={loading} />
+          </form>
         </div>
       </main>
     </div>
